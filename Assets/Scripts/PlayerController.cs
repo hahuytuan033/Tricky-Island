@@ -1,37 +1,72 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class PlayerController : MonoBehaviour
 {
-    private Rigidbody2D rb;
-    private float moveSpeed;
-    private float jumpSpeed;
-    private bool isJumping;
-    private float moveHorizontal;
-    private float moveVertical;
-    // Start is called before the first frame update
+    float horizontalInput;
+    float moveSpeed = 5f;
+    bool isFacingRight = false;
+    float jumpForce = 5f;
+    bool isGrounded = false;
+
+    Rigidbody2D rb;
+    Animator animator;
+
     void Start()
     {
-        rb = gameObject.GetComponent<Rigidbody2D>();
-
-        moveSpeed = 2f;
-        jumpSpeed = 60f;
-        isJumping = false;
+        rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        moveHorizontal = Input.GetAxisRaw("Horizontal");
-        moveVertical = Input.GetAxisRaw("Vertical");
+        horizontalInput = Input.GetAxis("Horizontal");
+
+        FlipSprite();
+
+        if (Input.GetButtonDown("Jump") && isGrounded)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+            isGrounded = false;
+            animator.SetBool("isJumping", !isGrounded);
+        }
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
-        if(moveHorizontal> 0.1f || moveHorizontal< -0.1f)
+        rb.velocity = new Vector2(horizontalInput * moveSpeed, rb.velocity.y);
+        animator.SetFloat("xVelocity", Math.Abs(rb.velocity.x));
+        animator.SetFloat("yVelocity", rb.velocity.y);
+    }
+
+    void FlipSprite()
+    {
+        if (isFacingRight && horizontalInput < 0f || !isFacingRight && horizontalInput > 0f)
         {
-            rb.AddForce(new Vector2(moveHorizontal* moveSpeed, 0f), ForceMode2D.Impulse);
-        }    
+            isFacingRight = !isFacingRight;
+            Vector3 ls = transform.localScale;
+            ls.x *= -1f;
+            transform.localScale = ls;
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = true;
+            animator.SetBool("isJumping", !isGrounded);
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = false;
+            animator.SetBool("isJumping", !isGrounded);
+        }
     }
 }
