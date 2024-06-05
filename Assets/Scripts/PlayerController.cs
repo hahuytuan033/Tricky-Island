@@ -6,7 +6,7 @@ using System;
 public class PlayerController : MonoBehaviour
 {
     float horizontalInput;
-    float moveSpeed = 5f;
+    float moveSpeed = 3f;
     bool isFacingRight = false;
     float jumpForce = 5f;
     bool isGrounded = false;
